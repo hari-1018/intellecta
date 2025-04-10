@@ -1,5 +1,6 @@
 import Course from "../models/coursesModel"
 import Lesson from "../models/lessonsModel";
+import LessonProgress from "../models/lessonProgressModel";
 import CustomError from "../utils/customError";
 
 export const getAllCoursesService = async () => {
@@ -7,11 +8,11 @@ export const getAllCoursesService = async () => {
     return { courses };
 };
 
-export const getAllCoursesBySubjectService = async (subject:string) => {
-    if(!subject){
+export const getAllCoursesBySubjectService = async (subject:string, gradeLevel: number) => {
+    if(!subject || !gradeLevel){
         throw new CustomError("Please provide the subject", 404);
     }
-    const courses = await Course.find({ subject });
+    const courses = await Course.find({ subject, gradeLevel });
     if (!courses || courses.length === 0){
         throw new CustomError("There are no course for this subject", 404);
     }
@@ -26,7 +27,7 @@ export const getCourseWithLessonsService = async (courseId:string) => {
     if(!course){
         throw new CustomError("Course not found", 404);
     }
-    const lessons = await Lesson.find({course: courseId});
+    const lessons = await Lesson.find({course: courseId}).sort({order: 1});
     if(!lessons){
         throw new CustomError("No lessons for the provided course", 404);
     }
@@ -43,6 +44,20 @@ export const getLessonByIdService = async( lessonId:string ) => {
     }
     return { lesson };
 }
+
+export const markLessonAsCompleteService = async (lessonId: string, userId: string) => {
+    if (!lessonId) {
+        throw new CustomError("Lesson ID is required", 400);
+    }
+
+    const progress = await LessonProgress.findOneAndUpdate(
+        { lessonId, userId },
+        { completed: true, completedAt: new Date() },
+        { upsert: true, new: true }
+    );
+
+    return { progress };
+};
 
 export const searchCoursesService = async (subject?:string, level?:string) => {
     const query: any = {};
