@@ -69,4 +69,33 @@ export const searchCoursesService = async (subject?:string, level?:string) => {
         throw new CustomError("No courses found for the given filters", 404);
     }
     return { courses };
-}
+};
+
+export const getFilteredCoursesService = async (subject: string, gradeLevel?: string, difficultyLevel?: string) => {
+    const filter: any = {};
+    if (subject) {
+      filter.subject = subject.toLowerCase();
+    }
+  
+    if (gradeLevel) {
+      const grades = gradeLevel.split(",").map((g) => {
+        const gradeNum = Number(g.replace("Grade ", ""));
+        if (isNaN(gradeNum)) throw new CustomError("Invalid grade level", 400);
+        return gradeNum;
+      });
+      filter.gradeLevel = { $in: grades };
+    }
+  
+    if (difficultyLevel) {
+      const levels = difficultyLevel.split(",").map((l) => l.toLowerCase());
+      filter.difficultyLevel = { $in: levels };
+    }
+    const courses = await Course.find(filter);
+    if (!courses || courses.length === 0) {
+      console.log("No courses found for filter:", filter);
+      throw new CustomError("No courses found for the given filters", 404);
+    }
+  
+    console.log("Courses found:", courses.length);
+    return { courses };
+  };

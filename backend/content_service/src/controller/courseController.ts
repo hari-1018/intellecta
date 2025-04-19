@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { getAllCoursesBySubjectService, getAllCoursesService, getCourseWithLessonsService, getLessonByIdService, markLessonAsCompleteService, searchCoursesService } from "../services/courseServices";
+import { getAllCoursesBySubjectService, getAllCoursesService, getCourseWithLessonsService, getFilteredCoursesService, getLessonByIdService, markLessonAsCompleteService, searchCoursesService } from "../services/courseServices";
 import CustomError from "../utils/customError";
 import { mapAgeToGradeAndDifficulty } from "../utils/gradeMapping";
 import { publishToQueue } from "../utils/rabbitmq/rabbitmqPublish";
@@ -91,4 +91,14 @@ export const searchCourses = async (req:Request, res:Response) => {
     const { courses } = await searchCoursesService(subject as string | undefined,level as string | undefined);
     res.status(200).json({ status:'success', message:"Search is successfull", data:courses});
 };
+
+export const getFilteredCourses = async (req: Request, res: Response) => {
+    const { subject } = req.params;
+    const { gradeLevel, difficultyLevel } = req.query;
+  
+    console.log("Received query:", { subject, gradeLevel, difficultyLevel }); 
+
+      const { courses } = await getFilteredCoursesService(subject, gradeLevel as string | undefined, difficultyLevel as string | undefined);
+      res.status(200).json({status: "success", message: "Filtration is successful", data: courses});
+    }
 
